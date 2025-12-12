@@ -1,0 +1,50 @@
+name: Build Unsigned IPA
+
+on:
+  push:
+    分支: [ "main" ]  # 或你的主分支，通常是 main
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    runs-on: macos-latest  # GitHub 的 macOS 云服务器
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 15.0.1  # 仓库兼容的最低版，实际 runner 有更高
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '15.0.1'  # 可改成 '16.1' 如果想用最新
+
+      - name: Build Unsigned Archive
+        run: |
+          xcodebuild archive \
+            -project Forumate.xcodeproj \  # 项目文件
+            -scheme Forumate \  # 主 Scheme（从仓库看是这个）
+            -configuration Release \  # 生产模式
+            -archivePath Forumate.xcarchive \
+            -destination generic/platform=iOS \  # iOS 目标
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Export Unsigned IPA (Manual)
+        run: |
+          # 提取 .app 到 Payload
+          mkdir -p Payload
+          cp -r Forumate.xcarchive/Products/Applications/Forumate.app Payload/
+          
+          # 压缩成 IPA
+          zip -r Forumate-unsigned.ipa Payload
+          
+          # 清理
+          rm -rf Payload Forumate.xcarchive
+
+      - name: Upload Unsigned IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: forumate-unsigned-ipa
+          path: Forumate-unsigned.ipa
+          retention-days: 7  # 保留 7 天，可下载
