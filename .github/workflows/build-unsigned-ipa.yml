@@ -16,16 +16,18 @@ jobs:
       - name: Select Latest Stable Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: 'latest-stable'  # 改这里：自动最新
+          xcode-version: 'latest-stable'
 
-      - name: List project files (debug)
-        run: ls -la *.xcodeproj
+      - name: List project files and schemes (debug)
+        run: |
+          ls -la *.xcodeproj
+          xcodebuild -list -project Forumate.xcodeproj  # 这会输出所有 schemes/targets
 
       - name: Build Unsigned Archive
         run: |
           xcodebuild \
             -project Forumate.xcodeproj \
-            -scheme Forumate \
+            -scheme "Forumate-iOS" \  # 临时改：常见 iOS scheme 名；日志会确认
             -configuration Release \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
