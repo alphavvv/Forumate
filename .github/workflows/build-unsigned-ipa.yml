@@ -21,19 +21,12 @@ jobs:
       - name: List project files and schemes (debug)
         run: |
           ls -la *.xcodeproj
-          xcodebuild -list -project Forumate.xcodeproj  # 这会输出所有 schemes/targets
+          xcodebuild -list -project Forumate.xcodeproj  # 输出所有 schemes
 
       - name: Build Unsigned Archive
         run: |
-          xcodebuild \
-            -project Forumate.xcodeproj \
-            -scheme "Forumate-iOS" \  # 临时改：常见 iOS scheme 名；日志会确认
-            -configuration Release \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            -archivePath Forumate.xcarchive \
-            archive
+          # 单行命令，避免 YAML 续行问题
+          xcodebuild -project Forumate.xcodeproj -scheme Forumate-iOS -configuration Release CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO -archivePath Forumate.xcarchive archive
           echo "Archive built successfully"
 
       - name: Export Unsigned IPA (Manual)
