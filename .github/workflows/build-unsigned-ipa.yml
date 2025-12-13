@@ -9,8 +9,8 @@ jobs:
   build:
     runs-on: macos-latest
 
-    steps:
-      - name: Checkout code
+    steps: # <-- 2 spaces (Steps list starts here)
+      - name: Checkout code # <-- 4 spaces (First step)
         uses: actions/checkout@v4
 
       - name: Select Latest Stable Xcode
@@ -18,19 +18,15 @@ jobs:
         with:
           xcode-version: 'latest-stable'
 
-      # 调试步骤：列出项目文件和 Schemes
       - name: List project files, targets, 和 schemes (debug)
-        run: |
+        run: | # <-- 6 spaces (Shell block starts)
           echo "Current directory contents:"
           ls -la
           echo "Xcode Project Schemes and Targets:"
           xcodebuild -list -project Forumate.xcodeproj
 
-      # 关键修改：添加 -scheme 参数，并定义 Derived Data 路径变量
       - name: Build Unsigned App (.app)
         run: |
-          # 修正：使用 -scheme 参数来避免 xcodebuild 报错。
-          # 假设 Scheme 名称与 Target 名称相同：Forumate。
           DERIVED_DATA_PATH="build_output"
           
           mkdir -p $DERIVED_DATA_PATH
@@ -42,7 +38,6 @@ jobs:
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath $DERIVED_DATA_PATH \
-            # 关闭签名
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
@@ -51,40 +46,30 @@ jobs:
           echo "Listing build products inside Release-iphoneos directory:"
           ls -la $DERIVED_DATA_PATH/Build/Products/Release-iphoneos/
 
-      # 导出未签名的 IPA
       - name: Export Unsigned IPA (Manual)
-        run: |
+        run: | # <-- Shell script body starts
           APP_NAME="Forumate.app"
           IPA_NAME="Forumate-unsigned.ipa"
           DERIVED_DATA_PATH="build_output"
           
-          # 根据 xcodebuild 的输出结构，确定 .app 文件的精确路径
           APP_PATH="$DERIVED_DATA_PATH/Build/Products/Release-iphoneos/$APP_NAME"
           
-          # 检查 .app 是否存在
           if [ ! -d "$APP_PATH" ]; then
             echo "Error: .app file not found at expected path: $APP_PATH"
-            # 为了调试，输出 Derived Data 目录结构
             echo "Listing Derived Data contents for debugging:"
             find $DERIVED_DATA_PATH -name "*.app"
             exit 1
           fi
           
-          # 1. 创建 Payload 目录
           mkdir -p Payload
-          
-          # 2. 将 .app 复制到 Payload
           cp -r "$APP_PATH" Payload/
-          
-          # 3. 压缩 Payload 目录生成 .ipa 文件
           zip -r "$IPA_NAME" Payload
           
-          # 清理临时文件
           rm -rf $DERIVED_DATA_PATH Payload
           
-          echo "IPA exported: $(ls -la *.ipa)"
+          echo "IPA exported: $(ls -la *.ipa)" # <-- 确保这一行与上面 Shell 脚本内容对齐
 
-      - name: Upload Unsigned IPA Artifact
+      - name: Upload Unsigned IPA Artifact # <-- **最关键：这一行必须与上面的 `- name:` 行对齐 (4 个空格)**
         uses: actions/upload-artifact@v4
         with:
           name: forumate-unsigned-ipa
