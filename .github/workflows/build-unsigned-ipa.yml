@@ -25,7 +25,7 @@ jobs:
           echo "Available schemes:"
           xcodebuild -list -project Forumate.xcodeproj
 
-          # 过滤掉 Watch scheme，只取第一个 iOS scheme
+          # 只选第一个不包含 Watch 的 scheme
           SCHEME=$(xcodebuild -list -project Forumate.xcodeproj \
             | sed -n '/Schemes:/,$p' \
             | sed '1d' \
