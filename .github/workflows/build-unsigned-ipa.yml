@@ -32,26 +32,24 @@ jobs:
         run: |
           if [ ! -f Podfile ]; then
             pod init
-            echo "Podfile initialized."
+            echo "Initialized Podfile."
           else
             echo "Podfile already exists."
           fi
 
-      # Step 5: Edit the Podfile to include necessary dependencies
+      # Step 5: Update Podfile with dependencies
       - name: Update Podfile with dependencies
         run: |
-          sed -i '' 's/# platform :ios, .*/platform :ios, "13.0"/' Podfile
+          sed -i '' 's|# platform :ios, .*|platform :ios, "13.0"|' Podfile
           sed -i '' '/# Pods for Forumate/a\
-pod "Alamofire", "~> 5.7"\
-pod "Kingfisher", "~> 7.0"' Podfile
+pod "Alamofire", "~> 5.7"\npod "Kingfisher", "~> 7.0"' Podfile
           cat Podfile
 
       # Step 6: Install Pods
       - name: Install Pods
-        run: |
-          pod install
+        run: pod install
 
-      # Step 7: Build and Archive the iOS Project
+      # Step 7: Build and Archive iOS Project
       - name: Build and Archive
         run: |
           xcodebuild archive \
