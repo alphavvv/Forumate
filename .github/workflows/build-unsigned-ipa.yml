@@ -1,4 +1,4 @@
-name: Build Unsigned iOS IPA
+name: Build Unsigned iOS IPA Only
 
 on:
   push:
@@ -19,37 +19,14 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Detect iOS scheme
-        id: detect
+      - name: Build iOS App target only (Unsigned)
         run: |
-          echo "Available schemes:"
-          xcodebuild -list -project Forumate.xcodeproj
-
-          # 只抓 iOS scheme，假设 scheme 名中不包含 "Watch"
-          SCHEME=$(xcodebuild -list -project Forumate.xcodeproj \
-            | sed -n '/Schemes:/,$p' \
-            | sed '1d' \
-            | sed 's/^ *//' \
-            | grep -v Watch \
-            | head -n 1)
-
-          if [ -z "$SCHEME" ]; then
-            echo "❌ No iOS scheme found"
-            exit 1
-          fi
-
-          echo "Using scheme: $SCHEME"
-          echo "scheme=$SCHEME" >> $GITHUB_OUTPUT
-
-      - name: Build iOS app unsigned
-        run: |
-          mkdir build
+          mkdir -p build
           xcodebuild build \
             -project Forumate.xcodeproj \
-            -scheme "${{ steps.detect.outputs.scheme }}" \
+            -target Forumate \
             -configuration Release \
             -sdk iphoneos \
-            -destination generic/platform=iOS \
             -derivedDataPath build \
             ONLY_ACTIVE_ARCH=YES \
             CODE_SIGN_IDENTITY="" \
@@ -68,6 +45,7 @@ jobs:
           mkdir Payload
           cp -R "$APP_PATH" Payload/
           zip -r Forumate-iOS-unsigned.ipa Payload
+          rm -rf Payload
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
