@@ -1,63 +1,54 @@
-name: iOS Build and Archive
+name: Build Unsigned IPA
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Build and Archive iOS
     runs-on: macos-latest
 
     steps:
-      # Step 1: Checkout the repository
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # Step 2: Set up Xcode (macOS includes Xcode preinstalled)
-      - name: Set up Xcode
+      - name: Select Latest Stable Xcode
         uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 'latest-stable'
 
-      # Step 3: Install CocoaPods
-      - name: Install CocoaPods
+      - name: List project files, targets, 和 schemes (debug)
         run: |
-          brew install cocoapods
+          ls -la *.xcodeproj
+          xcodebuild -list -project Forumate.xcodeproj  # 输出所有 targets/schemes
 
-      # Step 4: Initialize Podfile if it doesn't exist
-      - name: Initialize Podfile
+      - name: Build Unsigned App (No Archive)
         run: |
-          if [ ! -f Podfile ]; then
-            pod init
-            echo "Initialized Podfile."
-          else
-            echo "Podfile already exists."
-          fi
-
-      # Step 5: Update Podfile with dependencies
-      - name: Update Podfile with dependencies
-        run: |
-          sed -i '' 's|# platform :ios, .*|platform :ios, "13.0"|' Podfile
-          sed -i '' '/# Pods for Forumate/a\
-pod "Alamofire", "~> 5.7"\npod "Kingfisher", "~> 7.0"' Podfile
-          cat Podfile
-
-      # Step 6: Install Pods
-      - name: Install Pods
-        run: pod install
-
-      # Step 7: Build and Archive iOS Project
-      - name: Build and Archive
-        run: |
-          xcodebuild archive \
-            -workspace Forumate.xcworkspace \
-            -scheme Forumate \
+          # 直接 build .app，避免 archive 需要 scheme 的问题
+          mkdir build
+          xcodebuild build \
+            -project Forumate.xcodeproj \
+            -target Forumate \
             -configuration Release \
-            -destination "generic/platform=iOS" \
-            -archivePath Forumate.xcarchive \
+            -sdk iphoneos \
+            -derivedDataPath build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
+          echo "Build successful"
+
+      - name: Export Unsigned IPA (Manual)
+        run: |
+          mkdir -p Payload
+          cp -r build/Build/Products/Release-iphoneos/Forumate.app Payload/
+          zip -r Forumate-unsigned.ipa Payload
+          rm -rf build Payload
+          echo "IPA exported: $(ls -la *.ipa)"
+
+      - name: Upload Unsigned IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: forumate-unsigned-ipa
+          path: Forumate-unsigned.ipa
+          retention-days: 7
