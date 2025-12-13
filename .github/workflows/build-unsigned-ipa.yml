@@ -1,4 +1,4 @@
-name: Build and Release Unsigned IPA (CI Only)
+name: Build and Release Unsigned IPA
 
 on:
   push:
@@ -11,33 +11,35 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Select Latest Stable Xcode
+      - name: Select latest stable Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
 
-      - name: Debug: list targets
+      - name: Debug: list schemes
         run: |
           xcodebuild -list -project Forumate.xcodeproj
 
-      - name: Build .app (Unsigned, target mode)
+      - name: Build .app (Unsigned, scheme)
         run: |
+          mkdir -p build
           xcodebuild build \
             -project Forumate.xcodeproj \
-            -target Forumate \
+            -scheme Forumate \
             -configuration Release \
             -sdk iphoneos \
             -destination generic/platform=iOS \
+            -derivedDataPath build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Package IPA
         run: |
-          APP_PATH=$(find . -path "*Build/Products/Release-iphoneos/*.app" | head -n 1)
+          APP_PATH=$(find build -name "*.app" | head -n 1)
 
           if [ -z "$APP_PATH" ]; then
             echo "❌ .app not found"
@@ -49,13 +51,13 @@ jobs:
           zip -r Forumate-unsigned.ipa Payload
           rm -rf Payload
 
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v0.8.0-unsigned-${{ github.run_number }}
           name: Forumate Unsigned IPA v0.8.0 (Build ${{ github.run_number }})
           body: |
-            Unsigned IPA (CI-only build).
+            Unsigned IPA built via GitHub Actions.
             Use Sideloadly / AltStore / TrollStore to sign and install.
           files: Forumate-unsigned.ipa
           prerelease: true
