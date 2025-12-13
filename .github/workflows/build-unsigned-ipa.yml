@@ -22,10 +22,6 @@ jobs:
       - name: Detect iOS scheme
         id: detect
         run: |
-          echo "Available schemes:"
-          xcodebuild -list -project Forumate.xcodeproj
-
-          # 过滤掉 Watch scheme
           SCHEME=$(xcodebuild -list -project Forumate.xcodeproj \
             | sed -n '/Schemes:/,$p' \
             | sed '1d' \
@@ -53,4 +49,24 @@ jobs:
             -derivedDataPath build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING
+            CODE_SIGNING_ALLOWED=NO \
+            -skipBuildTargets ForumateWatch
+
+      - name: Package IPA
+        run: |
+          APP_PATH=$(find build -name "*.app" | head -n 1)
+          mkdir Payload
+          cp -R "$APP_PATH" Payload/
+          zip -r Forumate-iOS-unsigned.ipa Payload
+          rm -rf Payload
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.8.0-ios-unsigned-${{ github.run_number }}
+          name: Forumate iOS Unsigned IPA
+          body: Unsigned iOS IPA built via GitHub Actions
+          files: Forumate-iOS-unsigned.ipa
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
