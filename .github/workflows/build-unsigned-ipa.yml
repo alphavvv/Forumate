@@ -1,4 +1,4 @@
-name: Build and Release Unsigned IPA
+name: Build and Release Unsigned IPA (CI Only)
 
 on:
   push:
@@ -19,28 +19,32 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: List schemes (debug)
+      - name: Debug: list targets
         run: |
           xcodebuild -list -project Forumate.xcodeproj
 
-      - name: Build .app (Unsigned)
+      - name: Build .app (Unsigned, target mode)
         run: |
-          mkdir -p build
           xcodebuild build \
             -project Forumate.xcodeproj \
-            -scheme Forumate \
+            -target Forumate \
             -configuration Release \
             -sdk iphoneos \
             -destination generic/platform=iOS \
-            -derivedDataPath build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Package IPA
         run: |
-          APP_PATH=$(find build -name "*.app" | head -n 1)
-          mkdir -p Payload
+          APP_PATH=$(find . -path "*Build/Products/Release-iphoneos/*.app" | head -n 1)
+
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ .app not found"
+            exit 1
+          fi
+
+          mkdir Payload
           cp -R "$APP_PATH" Payload/
           zip -r Forumate-unsigned.ipa Payload
           rm -rf Payload
@@ -51,7 +55,7 @@ jobs:
           tag_name: v0.8.0-unsigned-${{ github.run_number }}
           name: Forumate Unsigned IPA v0.8.0 (Build ${{ github.run_number }})
           body: |
-            Unsigned IPA.
+            Unsigned IPA (CI-only build).
             Use Sideloadly / AltStore / TrollStore to sign and install.
           files: Forumate-unsigned.ipa
           prerelease: true
