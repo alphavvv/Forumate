@@ -11,7 +11,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Xcode
@@ -22,6 +22,11 @@ jobs:
       - name: Detect iOS scheme
         id: detect
         run: |
+          # 列出所有 scheme
+          echo "Available schemes:"
+          xcodebuild -list -project Forumate.xcodeproj
+
+          # 过滤掉 Watch scheme
           SCHEME=$(xcodebuild -list -project Forumate.xcodeproj \
             | sed -n '/Schemes:/,$p' \
             | sed '1d' \
@@ -55,6 +60,12 @@ jobs:
       - name: Package IPA
         run: |
           APP_PATH=$(find build -name "*.app" | head -n 1)
+
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ iOS .app not found"
+            exit 1
+          fi
+
           mkdir Payload
           cp -R "$APP_PATH" Payload/
           zip -r Forumate-iOS-unsigned.ipa Payload
