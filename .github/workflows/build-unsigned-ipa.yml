@@ -25,7 +25,7 @@ jobs:
           echo "Available schemes:"
           xcodebuild -list -project Forumate.xcodeproj
 
-          # 过滤掉 Watch scheme
+          # 过滤掉 Watch scheme，只取第一个 iOS scheme
           SCHEME=$(xcodebuild -list -project Forumate.xcodeproj \
             | sed -n '/Schemes:/,$p' \
             | sed '1d' \
@@ -53,8 +53,7 @@ jobs:
             -derivedDataPath build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            -skipBuildTargets ForumateWatch
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Package IPA
         run: |
