@@ -1,4 +1,4 @@
-name: Build Unsigned IPA (Auto Scheme)
+name: Build Unsigned iOS IPA
 
 on:
   push:
@@ -19,27 +19,29 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Detect scheme
+      - name: Detect iOS scheme
         id: detect
         run: |
           echo "Available schemes:"
           xcodebuild -list -project Forumate.xcodeproj
 
+          # 只抓 iOS scheme，假设 scheme 名中不包含 "Watch"
           SCHEME=$(xcodebuild -list -project Forumate.xcodeproj \
             | sed -n '/Schemes:/,$p' \
             | sed '1d' \
             | sed 's/^ *//' \
+            | grep -v Watch \
             | head -n 1)
 
           if [ -z "$SCHEME" ]; then
-            echo "❌ No scheme found"
+            echo "❌ No iOS scheme found"
             exit 1
           fi
 
           echo "Using scheme: $SCHEME"
           echo "scheme=$SCHEME" >> $GITHUB_OUTPUT
 
-      - name: Build app unsigned
+      - name: Build iOS app unsigned
         run: |
           mkdir build
           xcodebuild build \
@@ -49,30 +51,31 @@ jobs:
             -sdk iphoneos \
             -destination generic/platform=iOS \
             -derivedDataPath build \
+            ONLY_ACTIVE_ARCH=YES \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Package ipa
+      - name: Package iOS IPA
         run: |
           APP_PATH=$(find build -name "*.app" | head -n 1)
 
           if [ -z "$APP_PATH" ]; then
-            echo "❌ .app not found"
+            echo "❌ iOS .app not found"
             exit 1
           fi
 
           mkdir Payload
           cp -R "$APP_PATH" Payload/
-          zip -r Forumate-unsigned.ipa Payload
+          zip -r Forumate-iOS-unsigned.ipa Payload
 
-      - name: Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.8.0-unsigned-${{ github.run_number }}
-          name: Forumate Unsigned IPA
-          body: Unsigned IPA built via GitHub Actions
-          files: Forumate-unsigned.ipa
+          tag_name: v0.8.0-ios-unsigned-${{ github.run_number }}
+          name: Forumate iOS Unsigned IPA
+          body: Unsigned iOS IPA built via GitHub Actions
+          files: Forumate-iOS-unsigned.ipa
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
