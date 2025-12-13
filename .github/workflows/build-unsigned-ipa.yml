@@ -1,4 +1,4 @@
-name: iOS Archive and Build
+name: iOS Build and Archive
 
 on:
   push:
@@ -14,21 +14,49 @@ jobs:
     runs-on: macos-latest
 
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      # Step 2: Set up Xcode (macOS includes Xcode preinstalled)
       - name: Set up Xcode
         uses: maxim-lobanov/setup-xcode@v1
 
-      - name: Install Dependencies
+      # Step 3: Install CocoaPods
+      - name: Install CocoaPods
         run: |
           brew install cocoapods
-          pod install --project-directory=./
 
+      # Step 4: Initialize Podfile if it doesn't exist
+      - name: Initialize Podfile
+        run: |
+          if [ ! -f Podfile ]; then
+            pod init
+            echo "Podfile initialized."
+          else
+            echo "Podfile already exists."
+          fi
+
+      # Step 5: Edit the Podfile to include necessary dependencies
+      - name: Update Podfile with dependencies
+        run: |
+          sed -i '' 's/# platform :ios, .*/platform :ios, "13.0"/' Podfile
+          sed -i '' '/# Pods for Forumate/a\
+  pod "Alamofire", "~> 5.7"\
+  pod "Kingfisher", "~> 7.0"\
+  ' Podfile
+          cat Podfile
+
+      # Step 6: Install Pods
+      - name: Install Pods
+        run: |
+          pod install
+
+      # Step 7: Build and Archive the iOS Project
       - name: Build and Archive
         run: |
           xcodebuild archive \
-            -project Forumate.xcodeproj \
+            -workspace Forumate.xcworkspace \
             -scheme Forumate \
             -configuration Release \
             -destination "generic/platform=iOS" \
