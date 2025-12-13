@@ -2,53 +2,80 @@
 <Scheme
    LastUpgradeVersion = "1500"
    version = "1.7">
+   
+   <!-- 仅 iOS App 的 BuildAction -->
    <BuildAction
-      parallelizeBuildables = "YES"
-      buildImplicitDependencies = "YES">
+      parallelizeBuildables="YES"
+      buildImplicitDependencies="YES">
+      <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting="YES"
+            buildForRunning="YES"
+            buildForProfiling="YES"
+            buildForArchiving="YES"
+            buildForAnalyzing="YES">
+            <BuildableReference
+               BuildableIdentifier="primary"
+               BlueprintIdentifier="IOSAPP-0001-EXAMPLE"  <!-- iOS App target ID -->
+               BuildableName="Forumate.app"
+               BlueprintName="Forumate"
+               ReferencedContainer="container:Forumate.xcodeproj"/>
+         </BuildActionEntry>
+      </BuildActionEntries>
    </BuildAction>
+
+   <!-- 测试 Action -->
    <TestAction
-      buildConfiguration = "Debug"
-      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
-      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES"
-      shouldAutocreateTestPlan = "YES">
+      buildConfiguration="Debug"
+      selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB"
+      shouldUseLaunchSchemeArgsEnv="YES"
+      shouldAutocreateTestPlan="YES">
       <Testables>
          <TestableReference
-            skipped = "NO"
-            parallelizable = "YES">
+            skipped="NO"
+            parallelizable="YES">
             <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "2726053B2A1A005C0018B908"
-               BuildableName = "ForumateTests.xctest"
-               BlueprintName = "ForumateTests"
-               ReferencedContainer = "container:Forumate.xcodeproj">
-            </BuildableReference>
+               BuildableIdentifier="primary"
+               BlueprintIdentifier="TEST-0001-EXAMPLE"  <!-- 测试 target ID -->
+               BuildableName="ForumateTests.xctest"
+               BlueprintName="ForumateTests"
+               ReferencedContainer="container:Forumate.xcodeproj"/>
          </TestableReference>
       </Testables>
    </TestAction>
+
+   <!-- Launch Action -->
    <LaunchAction
-      buildConfiguration = "Debug"
-      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
-      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      launchStyle = "0"
-      useCustomWorkingDirectory = "NO"
-      ignoresPersistentStateOnLaunch = "NO"
-      debugDocumentVersioning = "YES"
-      debugServiceExtension = "internal"
-      allowLocationSimulation = "YES">
+      buildConfiguration="Debug"
+      selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB"
+      launchStyle="0"
+      useCustomWorkingDirectory="NO"
+      ignoresPersistentStateOnLaunch="NO"
+      debugDocumentVersioning="YES"
+      debugServiceExtension="internal"
+      allowLocationSimulation="YES">
    </LaunchAction>
+
+   <!-- Profile Action -->
    <ProfileAction
-      buildConfiguration = "Release"
-      shouldUseLaunchSchemeArgsEnv = "YES"
-      savedToolIdentifier = ""
-      useCustomWorkingDirectory = "NO"
-      debugDocumentVersioning = "YES">
+      buildConfiguration="Release"
+      shouldUseLaunchSchemeArgsEnv="YES"
+      savedToolIdentifier=""
+      useCustomWorkingDirectory="NO"
+      debugDocumentVersioning="YES">
    </ProfileAction>
+
+   <!-- Analyze Action -->
    <AnalyzeAction
-      buildConfiguration = "Debug">
+      buildConfiguration="Debug">
    </AnalyzeAction>
+
+   <!-- Archive Action -->
    <ArchiveAction
-      buildConfiguration = "Release"
-      revealArchiveInOrganizer = "YES">
+      buildConfiguration="Release"
+      revealArchiveInOrganizer="YES">
    </ArchiveAction>
-</Scheme>
+
+</Scheme>      
