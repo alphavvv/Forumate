@@ -22,7 +22,6 @@ jobs:
       - name: Detect iOS scheme
         id: detect
         run: |
-          # 列出所有 scheme
           echo "Available schemes:"
           xcodebuild -list -project Forumate.xcodeproj
 
