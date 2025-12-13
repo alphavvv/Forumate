@@ -19,41 +19,38 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Build iOS App target only (Unsigned)
+      - name: Detect iOS scheme
+        id: detect
+        run: |
+          echo "Available schemes:"
+          xcodebuild -list -project Forumate.xcodeproj
+
+          # 过滤掉 Watch scheme
+          SCHEME=$(xcodebuild -list -project Forumate.xcodeproj \
+            | sed -n '/Schemes:/,$p' \
+            | sed '1d' \
+            | sed 's/^ *//' \
+            | grep -v Watch \
+            | head -n 1)
+
+          if [ -z "$SCHEME" ]; then
+            echo "❌ No iOS scheme found"
+            exit 1
+          fi
+
+          echo "Using scheme: $SCHEME"
+          echo "scheme=$SCHEME" >> $GITHUB_OUTPUT
+
+      - name: Build iOS App unsigned
         run: |
           mkdir -p build
           xcodebuild build \
             -project Forumate.xcodeproj \
-            -target Forumate \
+            -scheme "${{ steps.detect.outputs.scheme }}" \
             -configuration Release \
             -sdk iphoneos \
+            -destination generic/platform=iOS \
             -derivedDataPath build \
-            ONLY_ACTIVE_ARCH=YES \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Package iOS IPA
-        run: |
-          APP_PATH=$(find build -name "*.app" | head -n 1)
-
-          if [ -z "$APP_PATH" ]; then
-            echo "❌ iOS .app not found"
-            exit 1
-          fi
-
-          mkdir Payload
-          cp -R "$APP_PATH" Payload/
-          zip -r Forumate-iOS-unsigned.ipa Payload
-          rm -rf Payload
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v0.8.0-ios-unsigned-${{ github.run_number }}
-          name: Forumate iOS Unsigned IPA
-          body: Unsigned iOS IPA built via GitHub Actions
-          files: Forumate-iOS-unsigned.ipa
-          prerelease: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            CODE_SIGNING
