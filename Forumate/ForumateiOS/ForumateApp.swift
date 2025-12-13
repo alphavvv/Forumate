@@ -4,7 +4,20 @@
 //
 //  Created by Kyle on 2023/4/19.
 //
+#if !os(watchOS)
+import SwiftUI
 
+@main
+struct ForumateApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+#endif
 import DiscourseKit
 import SwiftData
 import SwiftUI
