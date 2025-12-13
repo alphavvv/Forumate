@@ -1,4 +1,4 @@
-name: Build Unsigned IPA
+name: Build and Release Unsigned IPA
 
 on:
   push:
@@ -9,8 +9,8 @@ jobs:
   build:
     runs-on: macos-latest
 
-    steps: # <-- 2 spaces (Steps list starts here)
-      - name: Checkout code # <-- 4 spaces (First step)
+    steps:
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Select Latest Stable Xcode
@@ -18,61 +18,41 @@ jobs:
         with:
           xcode-version: 'latest-stable'
 
-      - name: List project files, targets, 和 schemes (debug)
-        run: | # <-- 6 spaces (Shell block starts)
-          echo "Current directory contents:"
-          ls -la
-          echo "Xcode Project Schemes and Targets:"
+      - name: Debug: list schemes
+        run: |
           xcodebuild -list -project Forumate.xcodeproj
 
-      - name: Build Unsigned App (.app)
+      - name: Build .app (Unsigned)
         run: |
-          DERIVED_DATA_PATH="build_output"
-          
-          mkdir -p $DERIVED_DATA_PATH
-          
           xcodebuild build \
             -project Forumate.xcodeproj \
             -scheme Forumate \
-            -target Forumate \
             -configuration Release \
             -sdk iphoneos \
-            -derivedDataPath $DERIVED_DATA_PATH \
+            -destination generic/platform=iOS \
+            -derivedDataPath build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
-            
-          echo "Build successful. Derived Data Path: $DERIVED_DATA_PATH"
-          echo "Listing build products inside Release-iphoneos directory:"
-          ls -la $DERIVED_DATA_PATH/Build/Products/Release-iphoneos/
 
-      - name: Export Unsigned IPA (Manual)
-        run: | # <-- Shell script body starts
-          APP_NAME="Forumate.app"
-          IPA_NAME="Forumate-unsigned.ipa"
-          DERIVED_DATA_PATH="build_output"
-          
-          APP_PATH="$DERIVED_DATA_PATH/Build/Products/Release-iphoneos/$APP_NAME"
-          
-          if [ ! -d "$APP_PATH" ]; then
-            echo "Error: .app file not found at expected path: $APP_PATH"
-            echo "Listing Derived Data contents for debugging:"
-            find $DERIVED_DATA_PATH -name "*.app"
-            exit 1
-          fi
-          
-          mkdir -p Payload
-          cp -r "$APP_PATH" Payload/
-          zip -r "$IPA_NAME" Payload
-          
-          rm -rf $DERIVED_DATA_PATH Payload
-          
-          echo "IPA exported: $(ls -la *.ipa)" # <-- 确保这一行与上面 Shell 脚本内容对齐
+      - name: Package IPA
+        run: |
+          APP_PATH=$(find build -name "*.app" -maxdepth 6 | head -n 1)
+          mkdir Payload
+          cp -R "$APP_PATH" Payload/
+          zip -r Forumate-unsigned.ipa Payload
+          rm -rf Payload
+          echo "IPA created: Forumate-unsigned.ipa"
 
-      - name: Upload Unsigned IPA Artifact # <-- **最关键：这一行必须与上面的 `- name:` 行对齐 (4 个空格)**
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: forumate-unsigned-ipa
-          path: Forumate-unsigned.ipa
-          retention-days: 7
-
+          tag_name: v0.8.0-unsigned-${{ github.run_number }}
+          name: Forumate Unsigned IPA v0.8.0 (Build ${{ github.run_number }})
+          body: |
+            Unsigned IPA.
+            Use Sideloadly / AltStore / TrollStore to sign & install.
+          files: Forumate-unsigned.ipa
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
