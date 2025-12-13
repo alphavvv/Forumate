@@ -42,9 +42,8 @@ jobs:
         run: |
           sed -i '' 's/# platform :ios, .*/platform :ios, "13.0"/' Podfile
           sed -i '' '/# Pods for Forumate/a\
-  pod "Alamofire", "~> 5.7"\
-  pod "Kingfisher", "~> 7.0"\
-  ' Podfile
+pod "Alamofire", "~> 5.7"\
+pod "Kingfisher", "~> 7.0"' Podfile
           cat Podfile
 
       # Step 6: Install Pods
